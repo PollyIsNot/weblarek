@@ -1,5 +1,7 @@
 export type ApiPostMethods = 'POST' | 'PUT' | 'DELETE';
 
+export type TPayment = 'card' | 'cash';
+
 export interface IApi {
     get<T extends object>(uri: string): Promise<T>;
     post<T extends object>(uri: string, data: object, method?: ApiPostMethods): Promise<T>;
@@ -15,13 +17,16 @@ export interface IProduct {
     price: number | null;
 }
 
-// interface для заказа
-export interface IOrder {
-    payment: string;
+// interface для покупателя
+export interface IBuyer {
+    payment: TPayment;
     email: string;
     phone: string;
     address: string;
-    total: number;
+}
+
+// interface для заказа
+export interface IOrder extends IBuyer {
     items: string[];
 }
 
@@ -34,7 +39,6 @@ export interface IOrderResult {
 // interface для состояния корзины
 export interface IBasketData {
     items: IProduct[];
-    total: number;
 }
 
 // interface для состояния заказа
@@ -44,3 +48,21 @@ export interface IOrderData {
     phone: string;
     address: string;
 }
+
+// ответ сервера на GET product
+export interface IProductsResponse {
+    total: number;
+    items: IProduct[];
+}
+
+// тело запроса POST order
+export interface IOrderRequest extends IOrder {
+    items: string[];
+}
+
+// ответ сервера на POST order
+export interface IOrderResponse {
+    id: string;
+    total: number;
+}
+

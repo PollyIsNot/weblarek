@@ -14,25 +14,21 @@ export class Basket {
         }
     }
 
-
     //удалить товар из корзины
     removeItem(id: string): void {
         this._items = this._items.filter(item => item.id !== id);
         this.events.emit('basket:changed', { items: this._items });
     }
 
-
     //получение всех товаров в корзине
     getItems(): IProduct[] {
         return this._items;
     }
 
-
     //получить количество товаров в корзине
     getCount(): number {
         return this._items.length;
     }
-
 
     //получение общей стоимости товаров в корзине
     getTotal(): number {
@@ -41,14 +37,12 @@ export class Basket {
         }, 0);
     }
 
-
     //очистить корзину
 
     clear(): void {
         this._items = [];
         this.events.emit('basket:changed', { items: this._items });
     }
-
 
     //проверка, есть ли товар в корзине
     hasItem(id: string): boolean {

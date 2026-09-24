@@ -1,112 +1,74 @@
-import { IOrder } from '../../types/index';
+import { IBuyer, TPayment } from '../../types/index';
 import { IEvents } from '../base/Events';
 
 export class Order {
-    private _order: IOrder = {
-        payment: '',
-        email: '',
-        phone: '',
-        address: '',
-        total: 0,
-        items: []
-    };
-
-    private _formErrors: Record<string, string> = {};
+    private _payment: TPayment | null = null;
+    private _email: string = '';
+    private _phone: string = '';
+    private _address: string = '';
 
     constructor(private events: IEvents) {}
 
-
-    //установить способ оплаты
-    setPayment(payment: string): void {
-        this._order.payment = payment;
-        this.validateOrder();
+    // установить способ оплаты
+    setPayment(payment: TPayment): void {
+        this._payment = payment;
     }
 
-
-    //установить адрес доставки
+    // установить адрес доставки
     setAddress(address: string): void {
-        this._order.address = address;
-        this.validateOrder();
+        this._address = address;
     }
 
-
-    //установить email
+    // установить email
     setEmail(email: string): void {
-        this._order.email = email;
-        this.validateOrder();
+        this._email = email;
     }
 
-
-    //установить телефон
+    // установить телефон
     setPhone(phone: string): void {
-        this._order.phone = phone;
-        this.validateOrder();
+        this._phone = phone;
     }
 
-
-    //установить общую стоимость
-    setTotal(total: number): void {
-        this._order.total = total;
-    }
-
-
-    //Установить товары в заказе
-    setItems(items: string[]): void {
-        this._order.items = items;
-    }
-
-
-    //получить данные заказа
-    getOrder(): IOrder {
-        return this._order;
-    }
-
-
-    //получить ошибки валидации
-    getFormErrors(): Record<string, string> {
-        return this._formErrors;
-    }
-
-
-    //валидировать заказ
-    private validateOrder(): void {
-        this._formErrors = {};
-
-        if (!this._order.payment) {
-            this._formErrors.payment = 'Необходимо выбрать способ оплаты';
-        }
-
-        if (!this._order.address) {
-            this._formErrors.address = 'Необходимо указать адрес доставки';
-        }
-
-        if (!this._order.email) {
-            this._formErrors.email = 'Необходимо указать email';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this._order.email)) {
-            this._formErrors.email = 'Некорректный email';
-        }
-
-        if (!this._order.phone) {
-            this._formErrors.phone = 'Необходимо указать телефон';
-        }
-
-        this.events.emit('order:validated', { 
-            isValid: Object.keys(this._formErrors).length === 0,
-            errors: this._formErrors 
-        });
-    }
-
-
-    //очистить заказ
-    clear(): void {
-        this._order = {
-            payment: '',
-            email: '',
-            phone: '',
-            address: '',
-            total: 0,
-            items: []
+    // получить данные заказа
+    getOrder(): IBuyer {
+        return {
+            payment: this._payment || 'card',
+            email: this._email,
+            phone: this._phone,
+            address: this._address
         };
-        this._formErrors = {};
+    }
+
+    // валидировать заказ
+    validate(): Record<string, string> {
+        const errors: Record<string, string> = {};
+
+        if (!this._payment) {
+            errors.payment = 'Необходимо выбрать способ оплаты';
+        }
+
+        if (!this._address) {
+            errors.address = 'Необходимо указать адрес доставки';
+        }
+
+        if (!this._email) {
+            errors.email = 'Необходимо указать email';
+        }
+
+        if (!this._phone) {
+            errors.phone = 'Необходимо указать телефон';
+        }
+
+        return errors;
+    }
+
+    // очистить заказ
+    clear(): void {
+        this._payment = null;
+        this._email = '';
+        this._phone = '';
+        this._address = '';
     }
 }
+
+

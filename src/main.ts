@@ -1,4 +1,7 @@
 import './scss/styles.scss';
+import { Api } from './components/base/Api';
+import { WebLarekApi } from './components/api/WebLarekApi';
+import { API_URL } from './utils/constants';
 import { EventEmitter } from './components/base/Events';
 import { Products } from './components/models/Products';
 import { Basket } from './components/models/Basket';
@@ -77,3 +80,22 @@ console.log('Ошибки при некорректном email: ', orderModel.g
 
 orderModel.clear();
 console.log('После очистки заказа: ', orderModel.getOrder());
+
+console.log('\n--- TEST API ---');
+
+const api = new Api(API_URL);
+const webLarekApi = new WebLarekApi(api);
+
+// Пример проверки получения списка продуктов от сервера
+webLarekApi
+    .getProducts()
+    .then((response) => {
+        productsModel.setItems(response.items);
+        console.log('Каталог товаров успешно загружен с сервера:', productsModel.getItems());
+    })
+    .catch((error) => {
+        console.error('Ошибка при получении товаров:', error);
+    });
+
+console.log('Приложение инициализировано');
+
