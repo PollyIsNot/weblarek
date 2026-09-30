@@ -6,46 +6,47 @@ export class Basket {
 
     constructor(private events: IEvents) {}
 
-    //добавить товар в корзину
-    addItem(item: IProduct): void {
-        if (!this._items.find(product => product.id === item.id)) {
-            this._items.push(item);
-            this.events.emit('basket:changed', { items: this._items });
-        }
-    }
-
-    //удалить товар из корзины
-    removeItem(id: string): void {
-        this._items = this._items.filter(item => item.id !== id);
-        this.events.emit('basket:changed', { items: this._items });
-    }
-
-    //получение всех товаров в корзине
+    // получение всех товаров в корзине
     getItems(): IProduct[] {
         return this._items;
     }
 
-    //получить количество товаров в корзине
+    // добавить товар в корзину
+    addItem(product: IProduct): void {
+        if (!this._items.find(item => item.id === product.id)) {
+            this._items.push(product);
+            this.events.emit('basket:changed', { items: this._items });
+        }
+    }
+
+    // удалить товар из корзины
+    removeItem(productId: string): void {
+        this._items = this._items.filter(item => item.id !== productId);
+        this.events.emit('basket:changed', { items: this._items });
+    }
+
+    // проверить наличие товара в корзине
+    hasItem(productId: string): boolean {
+        return this._items.some(item => item.id === productId);
+    }
+
+    // получить общую стоимость
+    getTotal(): number {
+        return this._items.reduce((sum, item) => {
+            return sum + (item.price ? item.price : 0);
+        }, 0);
+    }
+
+    // получить количество товаров
     getCount(): number {
         return this._items.length;
     }
 
-    //получение общей стоимости товаров в корзине
-    getTotal(): number {
-        return this._items.reduce((sum, item) => {
-            return sum + (item.price || 0);
-        }, 0);
-    }
-
-    //очистить корзину
-
+    // очистить корзину
     clear(): void {
         this._items = [];
         this.events.emit('basket:changed', { items: this._items });
     }
-
-    //проверка, есть ли товар в корзине
-    hasItem(id: string): boolean {
-        return this._items.some(item => item.id === id);
-    }
 }
+
+

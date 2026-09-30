@@ -7,30 +7,32 @@ export class Products {
 
     constructor(private events: IEvents) {}
 
-    // Установка массив товаров
+    // установка массива товаров
     setItems(items: IProduct[]): void {
         this._items = items;
         this.events.emit('items:changed', { items: this._items });
     }
 
-    //Получение всех товаров
+    // получение всех товаров
     getItems(): IProduct[] {
         return this._items;
     }
 
-    //Получение товар по ID
+    // получение товара по ID
     getProduct(id: string): IProduct | undefined {
         return this._items.find(item => item.id === id);
     }
 
-    //Установка ID товара для предпросмотра
+    // установка ID товара для предпросмотра
     setPreview(id: string): void {
         this._preview = id;
         this.events.emit('preview:changed', { preview: this.getProduct(id) });
     }
 
-    //Получение ID товара для предпросмотра
+    // получение ID товара для предпросмотра
     getPreview(): string | null {
         return this._preview;
     }
 }
+
+
