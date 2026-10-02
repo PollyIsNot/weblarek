@@ -3,7 +3,7 @@ import { Api } from './components/base/Api';
 import { WebLarekApi } from './components/api/WebLarekApi';
 import { API_URL } from './utils/constants';
 import { EventEmitter } from './components/base/Events';
-import { Products } from './components/models/Products';
+import { CatalogModel } from './components/models/CatalogModel';
 import { Basket } from './components/models/Basket';
 import { Order } from './components/models/Order';
 // View компоненты
@@ -24,7 +24,7 @@ import { Form } from './components/view/Form';
 const events = new EventEmitter();
 
 // Модели данных
-const productsModel = new Products(events);
+const catalogModel = new CatalogModel(events);
 const basketModel = new Basket(events);
 const orderModel = new Order(events);
 
@@ -38,13 +38,9 @@ const modalContainer = ensureElement<HTMLElement>('#modal-container');
 
 // View компоненты
 const gallery = new Gallery(galleryContainer);
-const modal = new Modal(modalContainer, events);
-const header = new Header(
-    ensureElement<HTMLElement>('.header'),
-    events
-);
+const modal = new Modal(modalContainer);
+const header = new Header(ensureElement<HTMLElement>('.header'), events);
 
-// Шаблоны
 const cardCatalogTemplate = ensureElement<HTMLTemplateElement>('#card-catalog');
 const cardPreviewTemplate = ensureElement<HTMLTemplateElement>('#card-preview');
 const cardBasketTemplate = ensureElement<HTMLTemplateElement>('#card-basket');
@@ -58,8 +54,8 @@ let currentFormInstance: Form | null = null;
 
 // Каталог товаров изменился
 events.on('items:changed', () => {
-    const items = productsModel.getItems();
-    const cards = items.map(item => {
+    const items = catalogModel.getProducts();
+    const cards = items.map((item: IProduct) => {
         const card = new Card(cloneTemplate(cardCatalogTemplate), (id: string) => {
             events.emit('card:select', { id });
         });
@@ -69,30 +65,30 @@ events.on('items:changed', () => {
 });
 
 // Товар выбран для просмотра
-events.on('preview:changed', (data: { preview: IProduct | undefined }) => {
-    if (data.preview) {
+events.on('preview:changed', () => {
+    const preview = catalogModel.getPreview();
+    if (preview) {
         const cardPreview = new CardPreview(
             cloneTemplate(cardPreviewTemplate),
-            events,
             (id: string) => {
                 events.emit('card:add', { id });
             }
         );
-        modal.setContent(cardPreview.render(data.preview));
+        modal.setContent(cardPreview.render(preview));
         modal.open();
     }
 });
 
 // Содержимое корзины изменилось
 events.on('basket:changed', () => {
-    header.setCounter(basketModel.getItems().length);
+    header.setCounter(basketModel.getCount());
 });
 
 // При открытии формы заказа
 events.on('order:open', () => {
     const formOrder = new FormOrder(cloneTemplate(orderTemplate), events);
     currentFormInstance = formOrder;
-    modal.setContent(formOrder.render());
+    modal.setContent(formOrder.render({ errors: {}, isSubmitDisabled: true }));
     modal.open();
 });
 
@@ -100,11 +96,11 @@ events.on('order:open', () => {
 events.on('order:submit', () => {
     const formContacts = new FormContacts(cloneTemplate(contactsTemplate), events);
     currentFormInstance = formContacts;
-    modal.setContent(formContacts.render());
+    modal.setContent(formContacts.render({ errors: {}, isSubmitDisabled: true }));
     modal.open();
 });
 
-// Заказ валидирован
+// Данные покупателя изменились
 events.on('order:validated', (data: { isValid: boolean; errors: FormErrors }) => {
     if (currentFormInstance) {
         currentFormInstance.setSubmitButtonState(data.isValid);
@@ -114,13 +110,16 @@ events.on('order:validated', (data: { isValid: boolean; errors: FormErrors }) =>
 
 // Клик на карточку товара
 events.on('card:select', (data: { id: string }) => {
-    productsModel.setPreview(data.id);
+    const product = catalogModel.getProductById(data.id);
+    if (product) {
+        catalogModel.setPreview(product);
+    }
 });
 
 // Добавление товара в корзину
 events.on('card:add', (data: { id: string }) => {
-    const product = productsModel.getProduct(data.id);
-    if (product && product.price !== null) {
+    const product = catalogModel.getProductById(data.id);
+    if (product) {
         basketModel.addItem(product);
         modal.close();
     }
@@ -137,23 +136,23 @@ events.on('basket:open', () => {
     const items = basketModel.getItems();
     const total = basketModel.getTotal();
     const basketView = new BasketView(cloneTemplate(basketTemplate), events);
+    basketView.setDisabled(items.length === 0);
+
+    let basketContent: HTMLElement;
 
     if (items.length === 0) {
-        // Передаем пустой массив в render, чтобы BasketView сам заблокировал кнопку (items.length === 0)
-        basketView.render({ items: [], total });
-
-        // Добавляем сообщение "Корзина пуста" в список после render
+        basketContent = basketView.render({ items: [], total });
         const emptyMessage = document.createElement('li');
         emptyMessage.textContent = 'Корзина пуста';
         emptyMessage.style.textAlign = 'center';
         emptyMessage.style.padding = '20px';
-        
-        const list = basketView.container.querySelector('.basket__list');
+
+        const list = basketContent.querySelector('.basket__list');
         if (list) {
             list.appendChild(emptyMessage);
         }
     } else {
-        const cardElements = items.map((item, index) => {
+        const cardElements = items.map((item: IProduct, index: number) => {
             const cardBasket = new CardBasket(
                 cloneTemplate(cardBasketTemplate),
                 (id: string) => {
@@ -163,10 +162,10 @@ events.on('basket:open', () => {
             cardBasket.setIndex(index + 1);
             return cardBasket.render(item);
         });
-        basketView.render({ items: cardElements, total });
+        basketContent = basketView.render({ items: cardElements, total });
     }
 
-    modal.setContent(basketView.container);
+    modal.setContent(basketContent);
     modal.open();
 });
 
@@ -186,22 +185,28 @@ events.on('form:change', (data: { field: string; value: string }) => {
 
 // Отправка формы
 events.on('form:submit', () => {
-    const currentForm = modal.container.querySelector('form') as HTMLFormElement;
+    const currentForm = modal.getForm();
     const formName = currentForm?.getAttribute('name');
     if (formName === 'order') {
         const formContacts = new FormContacts(cloneTemplate(contactsTemplate), events);
         currentFormInstance = formContacts;
-        modal.setContent(formContacts.render());
+        modal.setContent(formContacts.render({ errors: {}, isSubmitDisabled: true }));
         modal.open();
     } else if (formName === 'contacts') {
         // Отправка заказа на сервер
         const items = basketModel.getItems();
         const total = basketModel.getTotal();
-        orderModel.setTotal(total);
-        orderModel.setItems(items.map(item => item.id));
         const order = orderModel.getOrder();
+        const orderData = {
+            payment: order.payment,
+            email: order.email,
+            phone: order.phone,
+            address: order.address,
+            total: total,
+            items: items.map((item: IProduct) => item.id)
+        };
         webLarekApi
-            .postOrder(order)
+            .postOrder(orderData)
             .then((response) => {
                 const successView = new Success(cloneTemplate(successTemplate), events);
                 modal.setContent(successView.render({ total: response.total }));
@@ -213,11 +218,6 @@ events.on('form:submit', () => {
                 console.error('Ошибка при отправке заказа:', error);
             });
     }
-});
-
-// Закрытие модального окна
-events.on('modal:close', () => {
-    // Логика закрытия уже реализована в Modal
 });
 
 // Закрытие окна успеха
@@ -232,10 +232,11 @@ events.on('success:close', () => {
 webLarekApi
     .getProducts()
     .then((response) => {
-        productsModel.setItems(response.items);
+        catalogModel.setProducts(response.items);
     })
     .catch((error) => {
         console.error('Ошибка при загрузке товаров:', error);
     });
 
 console.log('Приложение инициализировано');
+

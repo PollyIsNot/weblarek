@@ -14,22 +14,10 @@ export class Api {
         };
     }
 
-    protected async handleResponse<T>(response: Response): Promise<T> {
-        const contentType = response.headers.get('Content-Type') || '';
-
-        if (!response.ok) {
-            const errorText = contentType.includes('application/json')
-                ? await response.json().then(data => data.error ?? response.statusText)
-                : response.statusText || `HTTP ${response.status}`;
-            return Promise.reject(errorText);
-        }
-
-        if (contentType.includes('application/json')) {
-            return response.json() as Promise<T>;
-        }
-
-        const text = await response.text();
-        throw new Error(`Ожидался JSON, но сервер вернул ${contentType || 'не JSON'}: ${text.slice(0, 200)}`);
+    protected handleResponse<T>(response: Response): Promise<T> {
+        if (response.ok) return response.json();
+        else return response.json()
+            .then(data => Promise.reject(data.error ?? response.statusText));
     }
 
     get<T extends object>(uri: string) {

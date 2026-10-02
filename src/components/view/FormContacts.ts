@@ -1,26 +1,43 @@
-import { Form } from './Form';
+import { Form, IFormData } from './Form';
+import { IEvents } from '../base/Events';
+import { ensureElement } from '../../utils/utils';
+
+export interface IFormContactsData extends IFormData {
+    email?: string;
+    phone?: string;
+}
 
 export class FormContacts extends Form {
     protected emailInput: HTMLInputElement;
     protected phoneInput: HTMLInputElement;
 
-    constructor(container: HTMLElement, protected events: any) {
+    constructor(container: HTMLElement, protected events: IEvents) {
         super(container, events);
 
-        this.emailInput = this.form.querySelector('input[name="email"]') as HTMLInputElement;
-        this.phoneInput = this.form.querySelector('input[name="phone"]') as HTMLInputElement;
-
-        // проверка на null
-        if (!this.emailInput || !this.phoneInput) {
-            throw new Error('Не найдены поля email или phone в форме контактов');
-        }
+        this.emailInput = ensureElement<HTMLInputElement>('input[name="email"]', this.form);
+        this.phoneInput = ensureElement<HTMLInputElement>('input[name="phone"]', this.form);
     }
 
-    render(): HTMLElement {
-        this.clearForm();
+    render(data: IFormContactsData): HTMLElement {
+        this.setEmail(data.email || '');
+        this.setPhone(data.phone || '');
+        this.setErrors(data.errors);
+        this.setSubmitButtonState(!data.isSubmitDisabled);
         return this.container;
     }
+
+    setEmail(email: string): void {
+        this.emailInput.value = email;
+    }
+
+    setPhone(phone: string): void {
+        this.phoneInput.value = phone;
+    }
 }
+
+
+
+
 
 
 

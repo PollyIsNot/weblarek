@@ -75,8 +75,11 @@ export class Order {
             this._formErrors.address = 'Необходимо указать адрес доставки';
         }
 
+        // Кнопка "Далее" активна только если оба поля заполнены
+        const isValid = this._payment !== null && this._address !== '';
+
         this.events.emit('order:validated', {
-            isValid: Object.keys(this._formErrors).length === 0,
+            isValid,
             errors: this._formErrors
         });
     }
@@ -93,8 +96,10 @@ export class Order {
             this._formErrors.phone = 'Необходимо указать корректный телефон';
         }
 
+        const isValid = Object.keys(this._formErrors).length === 0;
+
         this.events.emit('order:validated', {
-            isValid: Object.keys(this._formErrors).length === 0,
+            isValid,
             errors: this._formErrors
         });
     }
@@ -109,7 +114,6 @@ export class Order {
         return phoneRegex.test(phone);
     }
 
-    // Очистить данные заказа
     clear(): void {
         this._payment = null;
         this._email = '';
@@ -118,5 +122,8 @@ export class Order {
         this._total = 0;
         this._items = [];
         this._formErrors = {};
+        this.events.emit('buyer:changed');
     }
 }
+
+

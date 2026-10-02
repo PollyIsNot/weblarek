@@ -1,40 +1,36 @@
-import { Component } from '../base/Component';
+import { CardBase } from './CardBase';
 import { IProduct } from '../../types';
 import { CDN_URL, categoryMap } from '../../utils/constants';
+import { ensureElement } from '../../utils/utils';
 
-export class CardPreview extends Component<IProduct> {
-    protected title: HTMLElement;
+export class CardPreview extends CardBase {
     protected image: HTMLImageElement;
     protected category: HTMLElement;
-    protected price: HTMLElement;
     protected description: HTMLElement;
     protected button: HTMLButtonElement;
+    private productId: string = '';
 
-     constructor(
+    constructor(
         container: HTMLElement,
-        protected events: any,
-        protected onAddToBasket?: (id: string) => void,
-        protected isInBasket: boolean = false // ✅ ДОБАВИТЬ
+        protected onAddToBasket?: (id: string) => void
     ) {
         super(container);
         
-        this.title = this.container.querySelector('.card__title') as HTMLElement;
-        this.image = this.container.querySelector('.card__image') as HTMLImageElement;
-        this.category = this.container.querySelector('.card__category') as HTMLElement;
-        this.price = this.container.querySelector('.card__price') as HTMLElement;
-        this.description = this.container.querySelector('.card__text') as HTMLElement;
-        this.button = this.container.querySelector('.card__button') as HTMLButtonElement;
+        this.image = ensureElement<HTMLImageElement>('.card__image', this.container);
+        this.category = ensureElement<HTMLElement>('.card__category', this.container);
+        this.description = ensureElement<HTMLElement>('.card__text', this.container);
+        this.button = ensureElement<HTMLButtonElement>('.card__button', this.container);
 
         this.button.addEventListener('click', () => {
             if (this.onAddToBasket) {
-                this.onAddToBasket((this.container as any).dataset.id);
+                this.onAddToBasket(this.productId);
             }
         });
     }
 
     render(data: IProduct): HTMLElement {
-        this.container.dataset.id = data.id;
-        this.title.textContent = data.title;
+        this.productId = data.id;
+        this.setTitle(data.title);
         this.setImage(this.image, `${CDN_URL}${data.image}`, data.title);
         
         this.category.className = 'card__category';
@@ -44,17 +40,31 @@ export class CardPreview extends Component<IProduct> {
         }
         this.category.textContent = data.category;
 
-        if (data.price) {
-            this.price.textContent = `${data.price} синапсов`;
-            this.button.disabled = false;
-            this.button.textContent = this.isInBasket ? 'Удалить из корзины' : 'В корзину';
-        } else {
-            this.price.textContent = 'Бесценно';
-            this.button.disabled = true;
-            this.button.textContent = 'Не продается';
-        }
-
         this.description.textContent = data.description;
+        this.setPrice(data.price);
+        
+        // Установка текста кнопки и её состояния в зависимости от цены
+        if (data.price === null) {
+            this.setButtonText('Недоступно');
+            this.setButtonDisabled(true);
+        } else {
+            this.setButtonText('Купить');
+            this.setButtonDisabled(false);
+        }
+        
         return this.container;
     }
+
+    setButtonText(text: string): void {
+        this.button.textContent = text;
+    }
+
+    setButtonDisabled(disabled: boolean): void {
+        this.button.disabled = disabled;
+    }
 }
+
+
+
+
+

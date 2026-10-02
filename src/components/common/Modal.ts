@@ -1,14 +1,15 @@
 import { Component } from '../base/Component';
+import { ensureElement } from '../../utils/utils';
 
 export class Modal extends Component<void> {
     protected closeButton: HTMLButtonElement;
     protected content: HTMLElement;
 
-    constructor(container: HTMLElement, protected events: any) {
+    constructor(container: HTMLElement) {
         super(container);
         
-        this.closeButton = this.container.querySelector('.modal__close') as HTMLButtonElement;
-        this.content = this.container.querySelector('.modal__content') as HTMLElement;
+        this.closeButton = ensureElement<HTMLButtonElement>('.modal__close', this.container);
+        this.content = ensureElement<HTMLElement>('.modal__content', this.container);
 
         this.closeButton.addEventListener('click', () => this.close());
         this.container.addEventListener('click', (e) => {
@@ -16,6 +17,10 @@ export class Modal extends Component<void> {
                 this.close();
             }
         });
+    }
+
+    public getForm(): HTMLFormElement | null {
+        return this.container.querySelector('form');
     }
 
     setContent(content: HTMLElement): void {
@@ -29,10 +34,7 @@ export class Modal extends Component<void> {
 
     close(): void {
         this.container.classList.remove('modal_active');
-        this.events.emit('modal:close');
-    }
-
-    render(): HTMLElement {
-        return this.container;
     }
 }
+
+
