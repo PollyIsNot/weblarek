@@ -49,6 +49,7 @@ https://github.com/PollyIsNot/weblarek
 
 ## Структура проекта
 
+```typescript
 src/
 ├── components/          # React-подобные компоненты
 │   ├── api/            # API клиент
@@ -62,7 +63,7 @@ src/
 ├── utils/              # Утилиты и константы
 ├── main.ts             # Точка входа приложения
 └── index.html          # HTML-файл главной страницы
-
+```
 
 ## Архитектура приложения
 
