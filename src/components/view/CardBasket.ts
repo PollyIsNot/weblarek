@@ -1,44 +1,39 @@
-import { Component } from '../base/Component';
+import { CardBase } from './CardBase';
 import { IProduct } from '../../types';
+import { ensureElement } from '../../utils/utils';
 
-export class CardBasket extends Component<IProduct> {
-    protected title: HTMLElement;
-    protected price: HTMLElement;
-    protected index: HTMLElement;
+export interface ICardBasketData extends IProduct {
+    index: number;
+}
+
+export class CardBasket extends CardBase<ICardBasketData> {
+    protected indexElement: HTMLElement;
     protected deleteButton: HTMLButtonElement;
 
     constructor(
         container: HTMLElement,
-        protected onDelete?: (id: string) => void
+        protected onDelete?: () => void
     ) {
         super(container);
 
-        this.title = this.container.querySelector('.card__title') as HTMLElement;
-        this.price = this.container.querySelector('.card__price') as HTMLElement;
-        this.index = this.container.querySelector('.basket__item-index') as HTMLElement;
-        this.deleteButton = this.container.querySelector('.basket__item-delete') as HTMLButtonElement;
+        this.indexElement = ensureElement<HTMLElement>('.basket__item-index', this.container);
+        this.deleteButton = ensureElement<HTMLButtonElement>('.basket__item-delete', this.container);
 
         this.deleteButton.addEventListener('click', () => {
             if (this.onDelete) {
-                this.onDelete((this.container as any).dataset.id);
+                this.onDelete();
             }
         });
     }
 
-    render(data: IProduct, index?: number): HTMLElement {
-    this.container.dataset.id = data.id;
-    this.title.textContent = data.title;
-    this.price.textContent = `${data.price} синапсов`;
-    
-    if (index !== undefined) {
-        this.setIndex(index + 1);
+    set index(index: number) {
+        this.indexElement.textContent = String(index);
     }
-    
-    return this.container;
-}
 
-setIndex(index: number): void {
-    this.index.textContent = String(index);
-}
-
+    render(data: ICardBasketData): HTMLElement {
+        this.setTitle(data.title);
+        this.setPrice(data.price);
+        this.index = data.index;
+        return super.render();
+    }
 }

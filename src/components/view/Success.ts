@@ -1,4 +1,6 @@
 import { Component } from '../base/Component';
+import { IEvents } from '../base/Events';
+import { ensureElement } from '../../utils/utils';
 
 export class Success extends Component<{ total: number }> {
     protected description: HTMLElement;
@@ -6,12 +8,12 @@ export class Success extends Component<{ total: number }> {
 
     constructor(
         container: HTMLElement,
-        protected events: any
+        protected events: IEvents
     ) {
         super(container);
 
-        this.description = this.container.querySelector('.order-success__description') as HTMLElement;
-        this.closeButton = this.container.querySelector('.order-success__close') as HTMLButtonElement;
+        this.description = ensureElement<HTMLElement>('.order-success__description', this.container);
+        this.closeButton = ensureElement<HTMLButtonElement>('.order-success__close', this.container);
 
         this.closeButton.addEventListener('click', () => {
             this.events.emit('success:close');
@@ -20,6 +22,6 @@ export class Success extends Component<{ total: number }> {
 
     render(data: { total: number }): HTMLElement {
         this.description.textContent = `Списано ${data.total} синапсов`;
-        return this.container;
+        return super.render();
     }
 }

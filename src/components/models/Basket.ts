@@ -15,14 +15,14 @@ export class Basket {
     addItem(product: IProduct): void {
         if (!this._items.find(item => item.id === product.id)) {
             this._items.push(product);
-            this.events.emit('basket:changed', { items: this._items });
+            this.events.emit('basket:changed');
         }
     }
 
     // удалить товар из корзины
     removeItem(productId: string): void {
         this._items = this._items.filter(item => item.id !== productId);
-        this.events.emit('basket:changed', { items: this._items });
+        this.events.emit('basket:changed');
     }
 
     // проверить наличие товара в корзине
@@ -45,8 +45,6 @@ export class Basket {
     // очистить корзину
     clear(): void {
         this._items = [];
-        this.events.emit('basket:changed', { items: this._items });
+        this.events.emit('basket:changed');
     }
 }
-
-

@@ -3,41 +3,34 @@ import { IEvents } from '../base/Events';
 import { ensureElement } from '../../utils/utils';
 
 export interface IFormContactsData extends IFormData {
-    email?: string;
-    phone?: string;
+    email: string;
+    phone: string;
 }
 
-export class FormContacts extends Form {
+export class FormContacts extends Form<IFormContactsData> {
     protected emailInput: HTMLInputElement;
     protected phoneInput: HTMLInputElement;
 
-    constructor(container: HTMLElement, protected events: IEvents) {
-        super(container, events);
+    constructor(container: HTMLFormElement, events: IEvents) {
+        super(container, events, 'contacts:submit');
 
-        this.emailInput = ensureElement<HTMLInputElement>('input[name="email"]', this.form);
-        this.phoneInput = ensureElement<HTMLInputElement>('input[name="phone"]', this.form);
+        this.emailInput = ensureElement<HTMLInputElement>('input[name="email"]', this.container);
+        this.phoneInput = ensureElement<HTMLInputElement>('input[name="phone"]', this.container);
+
+        this.emailInput.addEventListener('input', () => {
+            this.events.emit('form:change', { field: 'email', value: this.emailInput.value });
+        });
+
+        this.phoneInput.addEventListener('input', () => {
+            this.events.emit('form:change', { field: 'phone', value: this.phoneInput.value });
+        });
     }
 
-    render(data: IFormContactsData): HTMLElement {
-        this.setEmail(data.email || '');
-        this.setPhone(data.phone || '');
-        this.setErrors(data.errors);
-        this.setSubmitButtonState(!data.isSubmitDisabled);
-        return this.container;
-    }
-
-    setEmail(email: string): void {
+    set email(email: string) {
         this.emailInput.value = email;
     }
 
-    setPhone(phone: string): void {
+    set phone(phone: string) {
         this.phoneInput.value = phone;
     }
 }
-
-
-
-
-
-
-

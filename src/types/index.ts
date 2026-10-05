@@ -40,33 +40,8 @@ export interface IOrderResult {
     total: number;
 }
 
-// interface для состояния корзины
-export interface IBasketData {
-    items: IProduct[];
-}
-
-// interface для состояния заказа
-export interface IOrderData {
-    payment: string;
-    email: string;
-    phone: string;
-    address: string;
-}
-
 // ответ сервера на GET product
 export interface IProductsResponse {
     total: number;
     items: IProduct[];
 }
-
-// тело запроса POST order
-export interface IOrderRequest extends IOrder {
-    items: string[];
-}
-
-// ответ сервера на POST order
-export interface IOrderResponse {
-    id: string;
-    total: number;
-}
-

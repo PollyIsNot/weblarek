@@ -8,60 +8,32 @@ export interface IFormData {
     isSubmitDisabled: boolean;
 }
 
-export class Form extends Component<IFormData> {
-    protected form: HTMLFormElement;
+export class Form<T extends IFormData> extends Component<T> {
     protected submitButton: HTMLButtonElement;
     protected errorsElement: HTMLElement;
 
-    constructor(container: HTMLElement, protected events: IEvents) {
+    constructor(
+        container: HTMLFormElement,
+        protected events: IEvents,
+        submitEvent: string
+    ) {
         super(container);
-        
-        // Проверяем, является ли сам контейнер формой
-        if (this.container instanceof HTMLFormElement) {
-            this.form = this.container as HTMLFormElement;
-        } else {
-            // Если контейнер не форма, ищем форму внутри
-            this.form = ensureElement<HTMLFormElement>('form', this.container);
-        }
-        
-        this.submitButton = ensureElement<HTMLButtonElement>('button[type="submit"]', this.form);
-        this.errorsElement = ensureElement<HTMLElement>('.form__errors', this.form);
 
-        this.form.addEventListener('submit', (e) => {
+        this.submitButton = ensureElement<HTMLButtonElement>('button[type="submit"]', this.container);
+        this.errorsElement = ensureElement<HTMLElement>('.form__errors', this.container);
+
+        this.container.addEventListener('submit', (e) => {
             e.preventDefault();
-            this.events.emit('form:submit');
-        });
-
-        this.form.addEventListener('change', (e) => {
-            const target = e.target as HTMLInputElement | HTMLButtonElement;
-            if (target.name) {
-                this.events.emit('form:change', {
-                    field: target.name,
-                    value: target.value || target.getAttribute('name')
-                });
-            }
+            this.events.emit(submitEvent);
         });
     }
 
-    render(data: IFormData): HTMLElement {
-        this.setErrors(data.errors);
-        this.setSubmitButtonState(!data.isSubmitDisabled);
-        return this.container;
-    }
-
-    setErrors(errors: FormErrors): void {
+    set errors(errors: FormErrors) {
         const errorMessages = Object.values(errors).filter(msg => msg);
         this.errorsElement.textContent = errorMessages.join('; ');
     }
 
-    setSubmitButtonState(isEnabled: boolean): void {
-        this.submitButton.disabled = !isEnabled;
-    }
-
-    protected clearForm(): void {
-        this.form.reset();
+    set isSubmitDisabled(disabled: boolean) {
+        this.submitButton.disabled = disabled;
     }
 }
-
-
-

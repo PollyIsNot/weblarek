@@ -1,37 +1,32 @@
-import { Component } from '../base/Component';
+import { CardBase } from './CardBase';
 import { IProduct } from '../../types';
 import { CDN_URL, categoryMap } from '../../utils/constants';
+import { ensureElement } from '../../utils/utils';
 
-export class Card extends Component<IProduct> {
-    protected title: HTMLElement;
+export class Card extends CardBase<IProduct> {
     protected image: HTMLImageElement;
     protected category: HTMLElement;
-    protected price: HTMLElement;
 
     constructor(
         container: HTMLElement,
-        protected onClick?: (id: string) => void
+        protected onClick?: () => void
     ) {
         super(container);
 
-        this.title = this.container.querySelector('.card__title') as HTMLElement;
-        this.image = this.container.querySelector('.card__image') as HTMLImageElement;
-        this.category = this.container.querySelector('.card__category') as HTMLElement;
-        this.price = this.container.querySelector('.card__price') as HTMLElement;
+        this.image = ensureElement<HTMLImageElement>('.card__image', this.container);
+        this.category = ensureElement<HTMLElement>('.card__category', this.container);
 
         this.container.addEventListener('click', () => {
             if (this.onClick) {
-                this.onClick((this.container as any).dataset.id);
+                this.onClick();
             }
         });
     }
 
     render(data: IProduct): HTMLElement {
-        this.container.dataset.id = data.id;
-        
-        this.title.textContent = data.title;
+        this.setTitle(data.title);
         this.setImage(this.image, `${CDN_URL}${data.image}`, data.title);
-        
+
         // Очищаем старые модификаторы категории
         this.category.className = 'card__category';
         // Добавляем новый модификатор
@@ -40,13 +35,9 @@ export class Card extends Component<IProduct> {
             this.category.classList.add(categoryModifier);
         }
         this.category.textContent = data.category;
-        
-        if (data.price) {
-            this.price.textContent = `${data.price} синапсов`;
-        } else {
-            this.price.textContent = 'Бесценно';
-        }
 
-        return this.container;
+        this.setPrice(data.price);
+
+        return super.render();
     }
 }

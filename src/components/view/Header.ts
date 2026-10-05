@@ -1,4 +1,6 @@
 import { Component } from '../base/Component';
+import { IEvents } from '../base/Events';
+import { ensureElement } from '../../utils/utils';
 
 export class Header extends Component<void> {
     protected basketButton: HTMLButtonElement;
@@ -6,12 +8,12 @@ export class Header extends Component<void> {
 
     constructor(
         container: HTMLElement,
-        protected events: any
+        protected events: IEvents
     ) {
         super(container);
 
-        this.basketButton = this.container.querySelector('.header__basket') as HTMLButtonElement;
-        this.counter = this.container.querySelector('.header__basket-counter') as HTMLElement;
+        this.basketButton = ensureElement<HTMLButtonElement>('.header__basket', this.container);
+        this.counter = ensureElement<HTMLElement>('.header__basket-counter', this.container);
 
         this.basketButton.addEventListener('click', () => {
             this.events.emit('basket:open');
@@ -20,9 +22,5 @@ export class Header extends Component<void> {
 
     setCounter(count: number): void {
         this.counter.textContent = String(count);
-    }
-
-    render(): HTMLElement {
-        return this.container;
     }
 }

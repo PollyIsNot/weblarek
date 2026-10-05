@@ -19,10 +19,6 @@ export class Modal extends Component<void> {
         });
     }
 
-    public getForm(): HTMLFormElement | null {
-        return this.container.querySelector('form');
-    }
-
     setContent(content: HTMLElement): void {
         this.content.innerHTML = '';
         this.content.appendChild(content);
@@ -36,5 +32,6 @@ export class Modal extends Component<void> {
         this.container.classList.remove('modal_active');
     }
 }
+
 
 

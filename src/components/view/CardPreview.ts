@@ -3,36 +3,39 @@ import { IProduct } from '../../types';
 import { CDN_URL, categoryMap } from '../../utils/constants';
 import { ensureElement } from '../../utils/utils';
 
-export class CardPreview extends CardBase {
+export interface ICardPreviewData extends IProduct {
+    buttonText: string;
+    buttonDisabled: boolean;
+}
+
+export class CardPreview extends CardBase<ICardPreviewData> {
     protected image: HTMLImageElement;
     protected category: HTMLElement;
     protected description: HTMLElement;
     protected button: HTMLButtonElement;
-    private productId: string = '';
 
     constructor(
         container: HTMLElement,
-        protected onAddToBasket?: (id: string) => void
+        protected onButtonClick?: () => void
     ) {
         super(container);
-        
+
         this.image = ensureElement<HTMLImageElement>('.card__image', this.container);
         this.category = ensureElement<HTMLElement>('.card__category', this.container);
         this.description = ensureElement<HTMLElement>('.card__text', this.container);
         this.button = ensureElement<HTMLButtonElement>('.card__button', this.container);
 
         this.button.addEventListener('click', () => {
-            if (this.onAddToBasket) {
-                this.onAddToBasket(this.productId);
+            if (this.onButtonClick) {
+                this.onButtonClick();
             }
         });
     }
 
-    render(data: IProduct): HTMLElement {
-        this.productId = data.id;
+    render(data: ICardPreviewData): HTMLElement {
         this.setTitle(data.title);
         this.setImage(this.image, `${CDN_URL}${data.image}`, data.title);
-        
+
         this.category.className = 'card__category';
         const categoryModifier = categoryMap[data.category as keyof typeof categoryMap];
         if (categoryModifier) {
@@ -42,17 +45,10 @@ export class CardPreview extends CardBase {
 
         this.description.textContent = data.description;
         this.setPrice(data.price);
-        
-        // Установка текста кнопки и её состояния в зависимости от цены
-        if (data.price === null) {
-            this.setButtonText('Недоступно');
-            this.setButtonDisabled(true);
-        } else {
-            this.setButtonText('Купить');
-            this.setButtonDisabled(false);
-        }
-        
-        return this.container;
+        this.setButtonText(data.buttonText);
+        this.setButtonDisabled(data.buttonDisabled);
+
+        return super.render();
     }
 
     setButtonText(text: string): void {
@@ -63,8 +59,3 @@ export class CardPreview extends CardBase {
         this.button.disabled = disabled;
     }
 }
-
-
-
-
-
